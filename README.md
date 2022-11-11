@@ -5,10 +5,16 @@ Firewall on DSM - IS OFF (!) or use rules for Docker containet subnet after inst
 
 Step: 1
 Create folders in DSM for ex. volume1: 
+
 /volume1/docker/mongodb/db /volume1/docker/mongodb/dump 
+
 /volume1/docker/rocketchat/uploads 
+
 /volume1/docker/rocketchat/emoji 
+
 /volume1/docker/rocketchat/sounds
+
+
 
 Step 2:
 Open Portainer or Docker Compose - Add Stack
