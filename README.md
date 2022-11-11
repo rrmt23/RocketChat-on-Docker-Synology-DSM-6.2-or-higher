@@ -1,4 +1,4 @@
-# RocketChat-on-Docker-Synology-DSM-6.2-or-higher
+# RocketChat on Docker Synology DSM 6.2 or higher
 
 If your CPU support AVX or AVX2 use - mongo:5 if no support AVS use - mongo:4.4. 
 
