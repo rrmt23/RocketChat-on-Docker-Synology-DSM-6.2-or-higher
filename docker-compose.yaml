@@ -1,0 +1,59 @@
+version: '2.2'
+
+services:
+  rocketchat:
+    image: rocketchat/rocket.chat:latest
+    command: >
+      bash -c
+        "for i in `seq 1 30`; do
+          node main.js &&
+          s=$$? && break || s=$$?;
+          echo \"Tried $$i times. Waiting 5 secs...\";
+          sleep 5;
+        done; (exit $$s)"
+    restart: unless-stopped
+    volumes:
+      - /volume1/docker/rocketchat/uploads:/app/uploads
+      - /volume1/docker/rocketchat/emoji:/app/emoji
+      - /volume1/docker/rocketchat/sounds:/app/sounds
+    environment:
+      - PORT=3000
+ # localhost below change to your chat.domain.com:3000 with https
+      - ROOT_URL=http://localhost:3000
+      - MONGO_URL=mongodb://mongo:27017/rocketchat?directConnection=true
+      - MONGO_OPLOG_URL=mongodb://mongo:27017/local?directConnection=true
+      - MAIL_URL=smtp://smtp.email
+#      - HTTP_PROXY=http://proxy.domain.com
+#      - HTTPS_PROXY=http://proxy.domain.com
+    depends_on:
+      - mongo
+    ports:
+      - 3111:3000
+    
+
+# If your CPU support AVX or AVX2 use mongo:5, if no use mongo:4.4 below
+  mongo:
+    image: mongo:5
+    restart: unless-stopped
+    volumes:
+     - /volume1/docker/mongodb/db:/data/db
+     - /volume1/docker/mongodb/dump:/dump
+    command: mongod --oplogSize 128 --replSet rs0
+    
+      # this container's job is just run the command to initialize the replica set.
+  # it will run the command and remove himself (it will not stay running)
+  mongo-init-replica:
+    image: mongo:5
+    command: >
+      bash -c
+        "for i in `seq 1 30`; do
+          mongo mongo/rocketchat --eval \"
+            rs.initiate({
+              _id: 'rs0',
+              members: [ { _id: 0, host: 'localhost:27017' } ]})\" &&
+          s=$$? && break || s=$$?;
+          echo \"Tried $$i times. Waiting 5 secs...\";
+          sleep 5;
+        done; (exit $$s)"
+    depends_on:
+      - mongo
